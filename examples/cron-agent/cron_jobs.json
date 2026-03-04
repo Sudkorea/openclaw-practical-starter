@@ -1,0 +1,206 @@
+{
+  "_comment": "Cron job schedule for the OpenClaw orchestrator agent.",
+  "_format_notes": [
+    "schedule: standard 5-field cron expression (min hour dom month dow)",
+    "action: 'script' | 'agent_message' | 'agent_spawn'",
+    "on_failure: 'escalate' (notify main channel) | 'log_only'",
+    "enabled: false to disable without deleting the entry",
+    "payload for agent_message: a handoff_packet.schema.json-conforming object",
+    "payload for script: {script_path, args, env_vars}"
+  ],
+
+  "jobs": [
+
+    {
+      "id": "health-check",
+      "description": "Ping all registered agents and log their status",
+      "schedule": "*/30 * * * *",
+      "action": "script",
+      "target": "example_scripts/health_check.py",
+      "payload": {
+        "script_path": "example_scripts/health_check.py",
+        "args": ["--output-airlock"],
+        "env_vars": {}
+      },
+      "on_failure": "escalate",
+      "enabled": true
+    },
+
+    {
+      "id": "nightly-study-queue",
+      "description": "Ask study-agent to generate learning queue from today's airlock records",
+      "schedule": "0 22 * * *",
+      "action": "agent_message",
+      "target": "study-agent",
+      "payload": {
+        "objective": "Read today's airlock daily records and produce a study_queue candidate list",
+        "scope": {
+          "files": [
+            "~/.openclaw/repos/obsidian-vault/airlock/daily/"
+          ],
+          "commands": []
+        },
+        "constraints": {
+          "runtime": "5min",
+          "budget": "low",
+          "style": "append to existing queue, do not overwrite"
+        },
+        "acceptance": {
+          "output_file": "~/.openclaw/repos/obsidian-vault/airlock/study_queue/",
+          "format": "JSON array of {topic, source_file, priority, review_date}"
+        },
+        "risk": "low"
+      },
+      "on_failure": "escalate",
+      "enabled": true
+    },
+
+    {
+      "id": "nightly-summary",
+      "description": "Generate daily ops summary and post to #ops channel",
+      "schedule": "30 22 * * *",
+      "action": "script",
+      "target": "example_scripts/nightly_summary.py",
+      "payload": {
+        "script_path": "example_scripts/nightly_summary.py",
+        "args": ["--date", "today", "--post-to-channel", "ops"],
+        "env_vars": {}
+      },
+      "on_failure": "log_only",
+      "enabled": true
+    },
+
+    {
+      "id": "airlock-cleanup",
+      "description": "Archive airlock daily records older than 30 days",
+      "schedule": "0 3 * * 0",
+      "action": "script",
+      "target": "example_scripts/airlock_cleanup.py",
+      "payload": {
+        "script_path": "example_scripts/airlock_cleanup.py",
+        "args": ["--older-than-days", "30", "--archive-dir", "/archive/airlock/"],
+        "env_vars": {}
+      },
+      "on_failure": "escalate",
+      "enabled": true
+    },
+
+    {
+      "id": "weekly-cost-report",
+      "description": "Pull GCP billing snapshot and post to #finance channel",
+      "schedule": "0 9 * * 1",
+      "action": "script",
+      "target": "example_scripts/cost_report.py",
+      "payload": {
+        "script_path": "example_scripts/cost_report.py",
+        "args": ["--period", "last-7-days", "--post-to-channel", "finance"],
+        "env_vars": {
+          "GCP_PROJECT_ID": "${GCP_PROJECT_ID}",
+          "GOOGLE_APPLICATION_CREDENTIALS": "${GOOGLE_APPLICATION_CREDENTIALS}"
+        }
+      },
+      "on_failure": "log_only",
+      "enabled": true
+    },
+
+    {
+      "id": "morning-briefing",
+      "description": "Send a short morning status to #ops: pending jobs, overnight failures",
+      "schedule": "0 9 * * *",
+      "action": "script",
+      "target": "example_scripts/nightly_summary.py",
+      "payload": {
+        "script_path": "example_scripts/nightly_summary.py",
+        "args": ["--date", "yesterday", "--mode", "morning-briefing", "--post-to-channel", "ops"],
+        "env_vars": {}
+      },
+      "on_failure": "log_only",
+      "enabled": true
+    },
+
+    {
+      "id": "voice-session-cleanup",
+      "description": "Ask voice-agent to close any stale open sessions and archive transcripts",
+      "schedule": "0 1 * * *",
+      "action": "agent_message",
+      "target": "voice-agent",
+      "payload": {
+        "objective": "Close any sessions open for more than 2 hours and archive their transcripts to airlock",
+        "scope": {
+          "files": [],
+          "commands": ["session_status", "session_close"]
+        },
+        "constraints": {
+          "runtime": "3min",
+          "budget": "low",
+          "style": "non-destructive — archive transcripts before closing"
+        },
+        "acceptance": {
+          "output_file": "~/.openclaw/repos/obsidian-vault/airlock/daily/",
+          "format": "one airlock record per closed session"
+        },
+        "risk": "low"
+      },
+      "on_failure": "log_only",
+      "enabled": true
+    },
+
+    {
+      "id": "weekly-study-review",
+      "description": "Ask study-agent to produce a weekly review of learning progress",
+      "schedule": "0 10 * * 0",
+      "action": "agent_message",
+      "target": "study-agent",
+      "payload": {
+        "objective": "Generate a weekly learning review: topics covered, retention gaps, next week priorities",
+        "scope": {
+          "files": [
+            "~/.openclaw/repos/obsidian-vault/airlock/study_queue/",
+            "~/.openclaw/repos/obsidian-vault/airlock/daily/"
+          ],
+          "commands": []
+        },
+        "constraints": {
+          "runtime": "10min",
+          "budget": "medium",
+          "style": "structured markdown, no filler"
+        },
+        "acceptance": {
+          "output_file": "~/.openclaw/repos/obsidian-vault/reviews/",
+          "format": "markdown with sections: Topics Covered, Gaps, Next Week"
+        },
+        "risk": "low"
+      },
+      "on_failure": "log_only",
+      "enabled": true
+    },
+
+    {
+      "id": "example-disabled-job",
+      "description": "Template for a disabled job — copy and modify to create new jobs",
+      "schedule": "0 12 * * *",
+      "action": "agent_message",
+      "target": "your-agent-name-here",
+      "payload": {
+        "objective": "Describe what the agent should produce",
+        "scope": {
+          "files": [],
+          "commands": []
+        },
+        "constraints": {
+          "runtime": "5min",
+          "budget": "low",
+          "style": ""
+        },
+        "acceptance": {
+          "output_file": "",
+          "format": ""
+        },
+        "risk": "low"
+      },
+      "on_failure": "log_only",
+      "enabled": false
+    }
+
+  ]
+}

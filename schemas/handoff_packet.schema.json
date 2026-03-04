@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent Handoff Packet",
+  "type": "object",
+  "required": ["objective", "scope", "constraints", "acceptance", "risk"],
+  "properties": {
+    "objective": {"type": "string"},
+    "scope": {"type": "object"},
+    "constraints": {"type": "object"},
+    "acceptance": {"type": "object"},
+    "risk": {"type": "string", "enum": ["low", "medium", "high"]}
+  }
+}

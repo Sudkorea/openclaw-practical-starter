@@ -1,0 +1,74 @@
+{
+  "_comment": "User learning preferences for the study-agent. Edit this file to customize your study experience.",
+
+  "max_items_per_day": 10,
+  "_max_items_note": "Maximum number of new items added to the study queue per nightly curation run. Prevents the queue from growing faster than you can review it.",
+
+  "language": "English",
+  "_language_note": "Language for generated concept summaries and self-check questions. Options: English, Korean, Japanese, etc. The agent will produce output in this language regardless of source language.",
+
+  "skip_topics": [
+    "daily budget report",
+    "health check",
+    "cost report",
+    "airlock cleanup",
+    "nightly summary"
+  ],
+  "_skip_topics_note": "Topics matching these strings (case-insensitive substring) will never be added to the study queue. Use this to filter out routine operational tasks that are not worth studying.",
+
+  "priority_topics": [
+    "error handling",
+    "async",
+    "vertex ai",
+    "pydantic",
+    "docker",
+    "gcp",
+    "api design"
+  ],
+  "_priority_topics_note": "Topics matching these strings are automatically elevated to 'high' priority in the study queue. Use this to ensure critical knowledge areas get reviewed first.",
+
+  "candidate_signals": [
+    "first time",
+    "new pattern",
+    "study_candidate: yes",
+    "didn't know",
+    "error",
+    "failed",
+    "timeout",
+    "retry",
+    "exception",
+    "traceback"
+  ],
+  "_candidate_signals_note": "Keywords that indicate a study candidate when found in an Airlock record. Extend this list to match your own workflow patterns.",
+
+  "output_format": "json",
+  "_output_format_note": "Format for study queue files: 'json' (structured, machine-readable) or 'markdown' (human-readable, suitable for Obsidian).",
+
+  "output_paths": {
+    "study_queue": "~/.openclaw/repos/obsidian-vault/airlock/study_queue/",
+    "knowledge_base": "~/.openclaw/repos/obsidian-vault/knowledge/",
+    "airlock_daily": "~/.openclaw/repos/obsidian-vault/airlock/daily/"
+  },
+
+  "deduplication": {
+    "window_days": 7,
+    "_window_note": "Look back this many days when checking for duplicate topics. Items added within this window for the same topic are skipped.",
+    "similarity_mode": "substring",
+    "_similarity_note": "How to compare topics for deduplication. 'substring' = simple text match. 'semantic' = use RAG similarity (requires RAG to be configured)."
+  },
+
+  "review_session": {
+    "max_items_per_session": 10,
+    "show_source_context": true,
+    "_show_source_note": "When showing review items, include the first 300 characters of the original Airlock record for context.",
+    "require_explicit_result": true,
+    "_require_explicit_note": "If true, operator must explicitly mark each item as known/failed/skip. If false, no input means 'skip'."
+  },
+
+  "notifications": {
+    "send_to_cron_agent": true,
+    "_send_note": "Send a completion message to cron-agent via sessions_send after each run. cron-agent then routes to the appropriate channel.",
+    "include_item_list_in_notification": false,
+    "_item_list_note": "If true, the completion message includes the list of new items. If false, just the summary counts. Keep false for large queues to avoid message spam."
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "_comment": "Spaced repetition review schedule for the study-agent.",
+  "_theory": "Based on the Leitner system and Ebbinghaus forgetting curve. Reviews at increasing intervals reinforce memory before it decays.",
+
+  "intervals": [3, 7, 21, 60],
+  "_intervals_note": [
+    "Day +3:  First review. Item is fresh but not yet encoded in short-term memory.",
+    "Day +7:  Second review. Reinforces the short-to-medium term transfer.",
+    "Day +21: Third review. Tests whether the concept survived 3 weeks without use.",
+    "Day +60: Maintenance review. Keeps rarely-used knowledge accessible."
+  ],
+
+  "failure_reset_to": 0,
+  "_failure_reset_note": "On a failed review, reset to this index in the intervals array. 0 = back to first interval (3 days). Set to 1 to reset to 7-day interval instead.",
+
+  "priority_modifiers": {
+    "_comment": "Multiply base intervals by these factors per priority level.",
+    "high":   [1.0, 1.0, 1.0, 1.0],
+    "medium": [1.0, 1.0, 1.0, 1.5],
+    "low":    [1.5, 1.5, 1.0, 2.0],
+    "_note": "High-priority items keep the base schedule. Low-priority items are spaced further apart to focus limited review time on important concepts."
+  },
+
+  "max_daily_reviews": 10,
+  "_max_daily_reviews_note": "Cap the number of items presented per review session. Prevents overwhelm and maintains review quality.",
+
+  "completion_state": "known",
+  "_completion_note": "After completing all intervals, items transition to this state. 'known' means the item is archived but not deleted.",
+
+  "failed_state": "learning",
+  "_failed_state_note": "Failed items remain in 'learning' state and are rescheduled."
+}

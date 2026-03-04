@@ -1,0 +1,52 @@
+{
+  "_comment": "RAG vector store configuration for the study-agent knowledge extractor.",
+  "_setup_note": "Set 'enabled' to true and choose your backend after installing the required packages.",
+
+  "enabled": false,
+
+  "backend": "chroma",
+
+  "chroma": {
+    "_comment": "Local Chroma DB — zero-setup, good for personal knowledge bases.",
+    "_install": "pip install chromadb sentence-transformers",
+    "chroma_path": "~/.openclaw/chroma_db",
+    "collection": "knowledge_base",
+    "embedding_model": "all-MiniLM-L6-v2",
+    "_embedding_note": "all-MiniLM-L6-v2 is fast and good enough for personal use. For better quality use 'all-mpnet-base-v2' (slower, larger)."
+  },
+
+  "weaviate": {
+    "_comment": "Weaviate — better for team knowledge bases or larger corpora.",
+    "_install": "pip install weaviate-client",
+    "_not_yet_implemented": "Add WeaviateBackend class to knowledge_extractor.py to use this.",
+    "url": "http://localhost:8080",
+    "api_key": "${WEAVIATE_API_KEY}",
+    "class_name": "KnowledgeItem",
+    "vectorizer": "text2vec-openai",
+    "_vectorizer_note": "Use 'text2vec-transformers' for a fully local setup."
+  },
+
+  "pgvector": {
+    "_comment": "pgvector — use if you already have PostgreSQL running.",
+    "_install": "pip install pgvector psycopg2-binary sqlalchemy",
+    "_not_yet_implemented": "Add PgVectorBackend class to knowledge_extractor.py to use this.",
+    "connection_string": "${DATABASE_URL}",
+    "table": "knowledge_embeddings",
+    "embedding_dimension": 384,
+    "_dimension_note": "384 for all-MiniLM-L6-v2. Adjust to match your embedding model."
+  },
+
+  "search_settings": {
+    "default_top_k": 5,
+    "max_top_k": 20,
+    "similarity_threshold": 0.7,
+    "_threshold_note": "Documents with similarity below this threshold are excluded from results. Adjust based on your embedding model and content diversity."
+  },
+
+  "indexing_settings": {
+    "batch_size": 10,
+    "_batch_note": "Number of documents to index in a single batch. Larger = faster but uses more memory.",
+    "retry_on_failure": true,
+    "max_retries": 3
+  }
+}
